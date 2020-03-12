@@ -13,16 +13,14 @@ public class ToolingApi {
     }
 
     public Map<String, String> getLogs() {
-        HttpResponse res = this.queryLogIds();
-        ToolingApiResponse toolingResponse = (ToolingApiResponse)Json.deserialize(res.getBody(), ToolingApiResponse.class);
-
+        Set<Id> logIds = this.queryLogIds();
         Map<String, String> logIdToLogBody = new Map<String, String>();
-        for(ToolingApiRecord logRecord : toolingResponse.records) {
+        for(Id logId : logIds) {
             HttpRequest logBodyReq = this.createHttpRequest();
-            String logIdPath = String.format(LOG_BODY_QUERY, new List<String> { logRecord.Id });
+            String logIdPath = String.format(LOG_BODY_QUERY, new List<String> { logId });
             logBodyReq.setEndpoint(logBodyReq.getEndpoint() + logIdPath);
             HttpResponse logBodyRes = this.http.Send(logBodyReq);
-            logIdToLogBody.put(logRecord.Id, logBodyRes.getBody());
+            logIdToLogBody.put(logId, logBodyRes.getBody());
         }
 
         String twelveHoursFromNow = System.now().addHours(12).format(TRACE_DATE_FORMAT);
@@ -32,13 +30,18 @@ public class ToolingApi {
         return logIdToLogBody;
     }
 
-    private HttpResponse queryLogIds() {
-        String query = 'SELECT Id, Status from ApexLog where Starttime >= TODAY'
-            + ' and Status != \'Success\' and Operation != \'Async Metadata\''
-            + ' order by Starttime LIMIT 10';
-
-        HttpRequest request = this.getQueryRequest(query);
-        return this.http.Send(request);
+    private Set<Id> queryLogIds() {
+        return new Map<Id, SObject>(
+            [
+                SELECT Id
+                FROM ApexLog
+                WHERE StartTime >= :this.auditLog.LastPoll__c
+                AND Status != 'Success'
+                AND Operation != 'Async Metadata'
+                ORDER BY StartTime
+                LIMIT 10
+            ]
+        ).keySet();
     }
 
     private HttpRequest getQueryRequest(String query) {

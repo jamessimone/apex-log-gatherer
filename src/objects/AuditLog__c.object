@@ -15,20 +15,18 @@
         <fullName>LastPoll__c</fullName>
         <externalId>false</externalId>
         <label>LastPoll</label>
-        <length>255</length>
         <required>true</required>
         <trackTrending>false</trackTrending>
-        <type>Text</type>
+        <type>DateTime</type>
         <unique>false</unique>
     </fields>
     <fields>
         <fullName>LastTraceFlagUpdate__c</fullName>
         <externalId>false</externalId>
         <label>LastPoll</label>
-        <length>255</length>
         <required>true</required>
         <trackTrending>false</trackTrending>
-        <type>Text</type>
+        <type>DateTime</type>
         <unique>false</unique>
     </fields>
     <label>AuditLog</label>
